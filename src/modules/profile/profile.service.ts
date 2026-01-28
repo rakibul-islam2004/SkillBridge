@@ -1,5 +1,5 @@
 import { prisma } from "../../lib/prisma";
-
+import { auth as betterAuth } from "../../lib/auth";
 
 type Role = "STUDENT" | "TUTOR" | "ADMIN";
 
@@ -19,6 +19,7 @@ export const ProfileService = {
           where: { userId },
           update: {},
           create: { userId },
+          include: { bookings: true }, // Example: include relations
         });
 
       case "TUTOR":
@@ -26,6 +27,10 @@ export const ProfileService = {
           where: { userId },
           update: {},
           create: { userId },
+          include: {
+            tutorCategories: { include: { category: true } },
+            pricings: true,
+          },
         });
 
       case "ADMIN":
@@ -48,9 +53,7 @@ export const ProfileService = {
       case "STUDENT":
         return prisma.studentProfile.update({
           where: { userId },
-          data: {
-            bio: data.bio,
-          },
+          data: { bio: data.bio },
         });
 
       case "TUTOR":
@@ -67,13 +70,22 @@ export const ProfileService = {
       case "ADMIN":
         return prisma.admin.update({
           where: { userId },
-          data: {
-            isActive: data.isActive,
-          },
+          data: { isActive: data.isActive },
         });
 
       default:
         throw new Error("Invalid role");
     }
+  },
+
+  // ---------------- BETTER AUTH PASSWORD ----------------
+  async updatePassword(headers: Headers, oldPw: string, newPw: string) {
+    return await betterAuth.api.changePassword({
+      headers,
+      body: {
+        currentPassword: oldPw,
+        newPassword: newPw,
+      },
+    });
   },
 };
