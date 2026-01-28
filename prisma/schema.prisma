@@ -102,7 +102,8 @@ model Verification {
   @@map("verification")
 }
 
-// ==================== SKILLBRIDGE MODELS ====================
+// ==================== SKILL BRIDGE MODELS ====================
+// ==================== STUDENT PROFILE ====================
 
 model StudentProfile {
   id        String   @id @default(uuid())
@@ -126,7 +127,7 @@ model TutorProfile {
   bio               String?
   experience        Int?
   experienceDetails String?
-  ratingAvg         Float    @default(0)
+  ratingAvg         Float?
   isActive          Boolean  @default(true)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
