@@ -1,8 +1,13 @@
 import { prisma } from "../../lib/prisma";
 
 export const BookingService = {
-  // DISCOVERY
-  async findTutors(filters: { categoryId?: string; search?: string }) {
+  // DISCOVERY: Search with Price, Rating, and Category filters
+  async findTutors(filters: {
+    categoryId?: string | undefined;
+    search?: string | undefined;
+    minPrice?: number | undefined;
+    maxPrice?: number | undefined;
+  }) {
     const where: any = { isActive: true };
 
     if (filters.categoryId) {
@@ -13,6 +18,18 @@ export const BookingService = {
       where.user = { name: { contains: filters.search, mode: "insensitive" } };
     }
 
+    if (filters.minPrice || filters.maxPrice) {
+      where.pricings = {
+        some: {
+          price: {
+            gte: filters.minPrice ? Number(filters.minPrice) : undefined,
+            lte: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+          },
+          isActive: true,
+        },
+      };
+    }
+
     return prisma.tutorProfile.findMany({
       where,
       include: {
@@ -20,6 +37,30 @@ export const BookingService = {
         tutorCategories: { include: { category: true } },
         pricings: { where: { isActive: true } },
         reviews: { select: { rating: true } },
+      },
+    });
+  },
+
+  // PUBLIC FEATURE
+  async getTutorDetails(tutorId: string) {
+    return prisma.tutorProfile.findUniqueOrThrow({
+      where: { id: tutorId },
+      include: {
+        user: { select: { name: true, image: true, email: true } },
+        tutorCategories: { include: { category: true } },
+        pricings: { where: { isActive: true } },
+        reviews: {
+          include: {
+            student: {
+              include: { user: { select: { name: true, image: true } } },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+        },
+        availabilities: {
+          where: { startTime: { gte: new Date() }, bookings: { none: {} } },
+          orderBy: { startTime: "asc" },
+        },
       },
     });
   },
@@ -49,6 +90,7 @@ export const BookingService = {
         },
       });
 
+      // Student's Learning Block
       await tx.calendarBlock.create({
         data: {
           userId: data.studentUserId,
@@ -60,6 +102,7 @@ export const BookingService = {
         },
       });
 
+      // Update Tutor's Teaching Block
       await tx.calendarBlock.updateMany({
         where: { availabilityId: data.availabilityId, type: "TEACHING" },
         data: { bookingId: booking.id },
@@ -69,7 +112,7 @@ export const BookingService = {
     });
   },
 
-  // COMPLETE & REVIEW
+  // REVIEW FEATURE: Submit feedback and update Tutor ratingAvg
   async leaveReview(data: {
     bookingId: string;
     studentId: string;
@@ -99,7 +142,11 @@ export const BookingService = {
     });
   },
 
-  async getUserBookings(studentId?: string, tutorId?: string) {
+  // USER DASHBOARD: Fetch booking history for Student or Tutor
+  async getUserBookings(
+    studentId?: string | undefined,
+    tutorId?: string | undefined,
+  ) {
     const conditions = [];
     if (studentId) conditions.push({ studentId });
     if (tutorId) conditions.push({ tutorId });
@@ -109,6 +156,7 @@ export const BookingService = {
       include: {
         tutor: { include: { user: { select: { name: true } } } },
         student: { include: { user: { select: { name: true } } } },
+        pricing: true,
         review: true,
       },
       orderBy: { startTime: "desc" },

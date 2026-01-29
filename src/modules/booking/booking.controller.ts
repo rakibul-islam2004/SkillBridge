@@ -4,10 +4,30 @@ import { BookingService } from "./booking.service";
 export const BookingController = {
   async listTutors(req: Request, res: Response) {
     try {
-      const tutors = await BookingService.findTutors(req.query);
+      const { categoryId, search, minPrice, maxPrice } = req.query;
+
+      const tutors = await BookingService.findTutors({
+        categoryId: categoryId as string | undefined,
+        search: search as string | undefined,
+        minPrice: minPrice ? Number(minPrice) : undefined,
+        maxPrice: maxPrice ? Number(maxPrice) : undefined,
+      });
+
       res.json(tutors);
     } catch (err: any) {
       res.status(500).json({ message: "Server error" });
+    }
+  },
+
+  async getTutorProfile(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) return res.status(400).json({ message: "ID required" });
+
+      const profile = await BookingService.getTutorDetails(id as string);
+      res.json(profile);
+    } catch (err) {
+      res.status(404).json({ message: "Tutor not found" });
     }
   },
 
