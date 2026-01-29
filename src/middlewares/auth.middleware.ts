@@ -11,6 +11,9 @@ declare global {
         role: "STUDENT" | "TUTOR" | "ADMIN";
         email: string;
         name: string;
+        tutorId?: string | undefined;
+        studentId?: string | undefined;
+        adminId?: string | undefined;
       };
     }
   }
@@ -29,9 +32,12 @@ export const authMiddleware = async (
     if (!session) return res.status(401).json({ message: "Unauthorized" });
 
     const { user } = session;
-    let role: "STUDENT" | "TUTOR" | "ADMIN" = "STUDENT";
 
-    const [tutor, admin] = await Promise.all([
+    const [student, tutor, admin] = await Promise.all([
+      prisma.studentProfile.findUnique({
+        where: { userId: user.id },
+        select: { id: true },
+      }),
       prisma.tutorProfile.findUnique({
         where: { userId: user.id },
         select: { id: true },
@@ -42,6 +48,7 @@ export const authMiddleware = async (
       }),
     ]);
 
+    let role: "STUDENT" | "TUTOR" | "ADMIN" = "STUDENT";
     if (admin) role = "ADMIN";
     else if (tutor) role = "TUTOR";
 
@@ -50,6 +57,9 @@ export const authMiddleware = async (
       role,
       email: user.email,
       name: user.name,
+      tutorId: tutor?.id,
+      studentId: student?.id,
+      adminId: admin?.id,
     };
 
     next();
