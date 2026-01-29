@@ -104,6 +104,21 @@ export const BookingService = {
         },
       });
 
+      const tutor = await tx.tutorProfile.findUnique({
+        where: { id: data.tutorId },
+        select: { userId: true },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: tutor!.userId,
+          type: "booking_confirmed",
+          title: "New Booking!",
+          message: `A student has booked a session for ${slot.startTime.toLocaleString()}.`,
+          relatedBookingId: booking.id,
+        },
+      });
+
       await tx.calendarBlock.create({
         data: {
           userId: data.studentUserId,
@@ -180,9 +195,20 @@ export const BookingService = {
         _avg: { rating: true },
       });
 
-      await tx.tutorProfile.update({
+      const tutor = await tx.tutorProfile.update({
         where: { id: data.tutorId },
         data: { ratingAvg: stats._avg.rating || 0 },
+        select: { userId: true },
+      });
+
+      await tx.notification.create({
+        data: {
+          userId: tutor.userId,
+          type: "review_received",
+          title: "New Review!",
+          message: `A student left you a ${data.rating}-star review.`,
+          relatedBookingId: data.bookingId,
+        },
       });
 
       return review;
