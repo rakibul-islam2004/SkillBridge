@@ -13,5 +13,6 @@ router.use(authMiddleware);
 router.get("/my-bookings", BookingController.myBookings);
 router.post("/confirm", BookingController.confirmBooking);
 router.post("/review", BookingController.submitReview);
+router.patch("/:id/cancel", BookingController.cancelBooking);
 
 export default router;

@@ -38,9 +38,30 @@ export const BookingController = {
         studentUserId: req.user!.id,
         ...req.body,
       });
-      res.status(201).json(booking);
+      res.status(201).json({ success: true, data: booking });
     } catch (err: any) {
-      res.status(400).json({ message: err.message });
+      res.status(400).json({ success: false, message: err.message });
+    }
+  },
+
+  async cancelBooking(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!id || typeof id !== "string") {
+        return res
+          .status(400)
+          .json({ message: "Valid Booking ID is required" });
+      }
+
+      const result = await BookingService.cancelBooking(
+        id,
+        reason || "No reason provided",
+      );
+      res.json({ success: true, message: "Booking cancelled", data: result });
+    } catch (err: any) {
+      res.status(400).json({ success: false, message: err.message });
     }
   },
 

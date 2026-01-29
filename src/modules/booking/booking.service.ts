@@ -65,8 +65,7 @@ export const BookingService = {
     });
   },
 
-  // BOOKING CORE
-  async createBooking(data: {
+ async createBooking(data: {
     studentId: string;
     studentUserId: string;
     tutorId: string;
@@ -74,9 +73,22 @@ export const BookingService = {
     availabilityId: string;
   }) {
     return await prisma.$transaction(async (tx) => {
+      // Conflict Prevention
+      const existing = await tx.booking.findFirst({
+        where: { 
+          availabilityId: data.availabilityId, 
+          status: { in: ["CONFIRMED", "PENDING"] } 
+        }
+      });
+      if (existing) throw new Error("This slot is already booked.");
+
       const slot = await tx.tutorAvailability.findUniqueOrThrow({
         where: { id: data.availabilityId },
       });
+
+      // Generate Workable Jitsi link
+      const roomName = `SB-${data.tutorId.slice(0, 8)}-${data.availabilityId.slice(0, 8)}`;
+      const meetingLink = `https://meet.jit.si{roomName}`;
 
       const booking = await tx.booking.create({
         data: {
@@ -87,10 +99,11 @@ export const BookingService = {
           startTime: slot.startTime,
           endTime: slot.endTime,
           status: "CONFIRMED",
+          meetingLink,
+          meetingLinkType: "jitsi-meet",
         },
       });
 
-      // Student's Learning Block
       await tx.calendarBlock.create({
         data: {
           userId: data.studentUserId,
@@ -102,7 +115,6 @@ export const BookingService = {
         },
       });
 
-      // Update Tutor's Teaching Block
       await tx.calendarBlock.updateMany({
         where: { availabilityId: data.availabilityId, type: "TEACHING" },
         data: { bookingId: booking.id },
@@ -111,6 +123,26 @@ export const BookingService = {
       return booking;
     });
   },
+
+  async cancelBooking(bookingId: string, reason: string) {
+    return await prisma.$transaction(async (tx) => {
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: "CANCELLED",
+          cancelledAt: new Date(),
+          cancellationReason: reason,
+        },
+      });
+
+      await tx.calendarBlock.deleteMany({
+        where: { bookingId },
+      });
+
+      return updatedBooking;
+    });
+  },
+
 
   // REVIEW FEATURE: Submit feedback and update Tutor ratingAvg
   async leaveReview(data: {

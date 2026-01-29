@@ -49,6 +49,8 @@ model User {
   studentProfile StudentProfile?
   tutorProfile   TutorProfile?
   adminProfile   Admin?
+  notifications  Notification[]
+  userRole       UserRole?
 
   @@unique([email])
   @@map("user")
@@ -122,15 +124,17 @@ model StudentProfile {
 // ==================== TUTOR PROFILE ====================
 
 model TutorProfile {
-  id                String   @id @default(uuid())
-  userId            String   @unique
+  id                String    @id @default(uuid())
+  userId            String    @unique
   bio               String?
   experience        Int?
   experienceDetails String?
   ratingAvg         Float?
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  isActive          Boolean   @default(true)
+  isFeatured        Boolean   @default(false)
+  featuredAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user            User                @relation(fields: [userId], references: [id])
   availabilities  TutorAvailability[]
@@ -199,13 +203,14 @@ model TutorPricing {
 // ==================== TUTOR AVAILABILITY ====================
 
 model TutorAvailability {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   tutorId     String
   startTime   DateTime
   endTime     DateTime
-  isRecurring Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isRecurring Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   tutor          TutorProfile    @relation(fields: [tutorId], references: [id])
   calendarBlocks CalendarBlock[]
@@ -217,17 +222,22 @@ model TutorAvailability {
 // ==================== BOOKING ====================
 
 model Booking {
-  id             String        @id @default(uuid())
-  studentId      String
-  tutorId        String
-  pricingId      String
-  availabilityId String
-  startTime      DateTime
-  endTime        DateTime
-  status         BookingStatus @default(PENDING)
-  meetingLink    String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                 String        @id @default(uuid())
+  studentId          String
+  tutorId            String
+  pricingId          String
+  availabilityId     String
+  startTime          DateTime
+  endTime            DateTime
+  status             BookingStatus @default(PENDING)
+  meetingLink        String?
+  meetingLinkType    String? // zoom, google-meet, etc
+  cancelledAt        DateTime?
+  cancellationReason String?
+  isRescheduled      Boolean       @default(false)
+  originalBookingId  String? // reference to original booking if rescheduled
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
   student      StudentProfile    @relation(fields: [studentId], references: [id])
   tutor        TutorProfile      @relation(fields: [tutorId], references: [id])
@@ -277,4 +287,37 @@ model CalendarBlock {
   user         User              @relation(fields: [userId], references: [id])
 
   @@map("calendar_block")
+}
+
+// ==================== NOTIFICATION ====================
+
+model Notification {
+  id               String   @id @default(uuid())
+  userId           String
+  type             String // booking_confirmed, booking_cancelled, review_received, etc
+  title            String
+  message          String
+  relatedBookingId String?
+  isRead           Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("notification")
+}
+
+// ==================== USER ROLE TRACKING ====================
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  role      String 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_role")
 }
