@@ -60,7 +60,7 @@ export const TutorService = {
     });
   },
 
-  // 4. Get Dashboard: Fetch full profile with relations
+  // 4. Get Dashboard: Profile details
   async getTutorFullProfile(userId: string) {
     return prisma.tutorProfile.findUnique({
       where: { userId },
@@ -74,4 +74,21 @@ export const TutorService = {
       },
     });
   },
+
+  // 5. Get Calendar: Fetch all blocks including Bookings for the UI
+  async getCalendarView(userId: string) {
+    return prisma.calendarBlock.findMany({
+      where: { userId },
+      include: {
+        booking: {
+          include: {
+            student: {
+              include: { user: { select: { name: true, image: true } } }
+            }
+          }
+        }
+      },
+      orderBy: { startTime: "asc" }
+    });
+  }
 };

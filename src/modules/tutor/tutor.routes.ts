@@ -9,4 +9,7 @@ router.use(authMiddleware);
 router.get("/dashboard", TutorController.getMySchedule);
 router.post("/setup", TutorController.setupTutor);
 
+// For calendar UI
+router.get("/calendar", TutorController.getCalendar);
+
 export default router;

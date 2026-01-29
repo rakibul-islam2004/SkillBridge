@@ -23,7 +23,7 @@ export const TutorController = {
         }
       }
 
-      // 3. Setup Availability 
+      // 3. Setup Availability
       if (availabilitySlots && Array.isArray(availabilitySlots)) {
         const formattedSlots = availabilitySlots.map((slot: any) => ({
           start: new Date(slot.start),
@@ -44,6 +44,31 @@ export const TutorController = {
       res.json(data);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch schedule" });
+    }
+  },
+
+  //For calendar UI
+  async getCalendar(req: Request, res: Response) {
+    try {
+      const blocks = await TutorService.getCalendarView(req.user!.id);
+
+      const events = blocks.map((block) => ({
+        id: block.id,
+        title: block.booking
+          ? `Lesson with ${block.booking.student.user.name}`
+          : "Available Slot",
+        start: block.startTime,
+        end: block.endTime,
+        extendedProps: {
+          type: block.type,
+          status: block.booking?.status || "OPEN",
+          studentImage: block.booking?.student.user.image,
+        },
+      }));
+
+      res.json(events);
+    } catch (err) {
+      res.status(500).json({ message: "Failed to fetch calendar blocks" });
     }
   },
 };
