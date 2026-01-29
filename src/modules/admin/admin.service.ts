@@ -45,6 +45,17 @@ export const AdminService = {
     throw new Error("Only Tutor and Admin statuses can be modified");
   },
 
+  //Feature/Unfeature a tutor for the landing page
+  async toggleFeatured(tutorId: string, isFeatured: boolean) {
+    return prisma.tutorProfile.update({
+      where: { id: tutorId },
+      data: {
+        isFeatured,
+        featuredAt: isFeatured ? new Date() : null,
+      },
+    });
+  },
+
   // Manage categories
   async getAllCategories() {
     return prisma.category.findMany({
@@ -72,7 +83,7 @@ export const AdminService = {
     });
   },
 
-  // Analytics 
+  // Analytics
   async getDashboardStats() {
     const [totalUsers, totalBookings, activeTutors] = await Promise.all([
       prisma.user.count(),

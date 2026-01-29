@@ -5,6 +5,7 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 const router = Router();
 
 // PUBLIC
+router.get("/featured-tutors", BookingController.listFeatured);
 router.get("/tutors", BookingController.listTutors);
 router.get("/tutors/:id", BookingController.getTutorProfile);
 

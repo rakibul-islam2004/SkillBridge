@@ -65,7 +65,7 @@ export const BookingService = {
     });
   },
 
- async createBooking(data: {
+  async createBooking(data: {
     studentId: string;
     studentUserId: string;
     tutorId: string;
@@ -75,10 +75,10 @@ export const BookingService = {
     return await prisma.$transaction(async (tx) => {
       // Conflict Prevention
       const existing = await tx.booking.findFirst({
-        where: { 
-          availabilityId: data.availabilityId, 
-          status: { in: ["CONFIRMED", "PENDING"] } 
-        }
+        where: {
+          availabilityId: data.availabilityId,
+          status: { in: ["CONFIRMED", "PENDING"] },
+        },
       });
       if (existing) throw new Error("This slot is already booked.");
 
@@ -124,6 +124,22 @@ export const BookingService = {
     });
   },
 
+  // fetch featured product
+  async getFeatured() {
+    return prisma.tutorProfile.findMany({
+      where: {
+        isActive: true,
+        isFeatured: true,
+      },
+      take: 6,
+      orderBy: { featuredAt: "desc" },
+      include: {
+        user: { select: { name: true, image: true } },
+        tutorCategories: { include: { category: true } },
+      },
+    });
+  },
+
   async cancelBooking(bookingId: string, reason: string) {
     return await prisma.$transaction(async (tx) => {
       const updatedBooking = await tx.booking.update({
@@ -142,7 +158,6 @@ export const BookingService = {
       return updatedBooking;
     });
   },
-
 
   // REVIEW FEATURE: Submit feedback and update Tutor ratingAvg
   async leaveReview(data: {

@@ -44,6 +44,12 @@ export const BookingController = {
     }
   },
 
+  // Fetch featured tutors
+  async listFeatured(req: Request, res: Response) {
+    const tutors = await BookingService.getFeatured();
+    res.json({ success: true, data: tutors });
+  },
+
   async cancelBooking(req: Request, res: Response) {
     try {
       const { id } = req.params;

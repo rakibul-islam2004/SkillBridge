@@ -27,6 +27,28 @@ export const AdminController = {
     }
   },
 
+  async toggleFeatured(req: Request, res: Response) {
+    const { tutorId } = req.params;
+    const { isFeatured } = req.body;
+
+    if (!tutorId || typeof tutorId !== "string") {
+      return res.status(400).json({ message: "Invalid Tutor ID" });
+    }
+
+    try {
+      const result = await AdminService.toggleFeatured(tutorId, isFeatured);
+      res.json({
+        success: true,
+        message: isFeatured
+          ? "Tutor is now featured"
+          : "Tutor removed from featured list",
+        data: result,
+      });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  },
+
   async listCategories(req: Request, res: Response) {
     const categories = await AdminService.getAllCategories();
     res.json(categories);

@@ -20,5 +20,6 @@ router.get("/bookings", AdminController.listBookings);
 router.get("/categories", AdminController.listCategories);
 router.post("/categories", AdminController.addCategory);
 router.get("/stats", AdminController.getDashboardStats);
+router.patch("/tutors/:tutorId/featured", AdminController.toggleFeatured);
 
 export default router;
