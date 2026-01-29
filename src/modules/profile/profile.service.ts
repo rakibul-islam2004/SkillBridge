@@ -88,4 +88,34 @@ export const ProfileService = {
       },
     });
   },
+
+  // ---------------- Role Onboarding ----------------
+  async initializeRole(userId: string, role: "STUDENT" | "TUTOR") {
+    return await prisma.$transaction(async (tx) => {
+      // 1. Check if the user already has a profile to prevent errors
+      const [existingStudent, existingTutor] = await Promise.all([
+        tx.studentProfile.findUnique({ where: { userId } }),
+        tx.tutorProfile.findUnique({ where: { userId } }),
+      ]);
+
+      if (existingStudent || existingTutor) {
+        throw new Error("User already has an assigned profile.");
+      }
+
+      // 2. Create the profile based on the selected role
+      if (role === "STUDENT") {
+        return tx.studentProfile.create({
+          data: { userId },
+        });
+      } else {
+        return tx.tutorProfile.create({
+          data: {
+            userId,
+            isActive: true,
+            ratingAvg: 0,
+          },
+        });
+      }
+    });
+  },
 };

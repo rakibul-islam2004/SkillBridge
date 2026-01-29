@@ -10,4 +10,6 @@ router.get("/me", ProfileController.getMe);
 router.patch("/me", ProfileController.updateMe);
 router.patch("/me/password", ProfileController.updatePassword);
 
+router.post("/onboard", ProfileController.onboard);
+
 export default router;

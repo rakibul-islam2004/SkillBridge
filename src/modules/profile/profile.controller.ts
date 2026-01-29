@@ -40,4 +40,24 @@ export const ProfileController = {
         .json({ message: err.message || "Password update failed" });
     }
   },
+   async onboard(req: Request, res: Response) {
+    try {
+      const { role } = req.body; // Expecting { "role": "STUDENT" } or "TUTOR"
+      const userId = req.user!.id;
+
+      if (!role || !["STUDENT", "TUTOR"].includes(role)) {
+        return res.status(400).json({ message: "Please select a valid role: STUDENT or TUTOR" });
+      }
+
+      const profile = await ProfileService.initializeRole(userId, role);
+
+      res.status(201).json({
+        success: true,
+        message: "Profile created successfully",
+        data: profile,
+      });
+    } catch (err: any) {
+      res.status(400).json({ message: err.message });
+    }
+  },
 };
