@@ -4,17 +4,19 @@ Welcome to the **SkillBridge** backend repository. This is a comprehensive backe
 
 ## 📋 Table of Contents
 
-- [Project Overview](#project-overview)
-- [ER Diagram](#er-diagram)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Getting Started](#getting-started)
+## 📋 Table of Contents
+
+- [Project Overview](#-project-overview)
+- [ER Diagram](#-er-diagram)
+- [Tech Stack](#-tech-stack)
+- [Features](#-features)
+- [Getting Started](#-getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Environment Setup](#environment-setup)
   - [Database Setup](#database-setup)
   - [Running the Server](#running-the-server)
-- [API Documentation](#api-documentation)
+- [API Documentation](#-api-documentation)
 
 ## 🚀 Project Overview
 
@@ -26,7 +28,7 @@ Here is the Entity-Relationship logic that powers SkillBridge's data architectur
 
 ![SkillBridge ER Diagram](./src/er.png)
 
-*The schema is built around three core pillars:*
+_The schema is built around three core pillars:_
 
 1.  **Identity & Role Management**: Extends `User` with specialized `StudentProfile`, `TutorProfile`, `Admin`, and `UserRole` models.
 2.  **Scheduling Engine**: A robust system connecting `TutorAvailability` and `TutorPricing` to `Booking`, managing time slots with `CalendarBlock`.
@@ -63,6 +65,7 @@ Follow these steps to set up the project locally.
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd SkillBridge
@@ -91,6 +94,7 @@ GOOGLE_CLIENT_SECRET="your_google_client_secret"
 ### Database Setup
 
 1. **Run Migrations** (Push schema to DB)
+
    ```bash
    npx prisma migrate dev
    ```
@@ -103,6 +107,7 @@ GOOGLE_CLIENT_SECRET="your_google_client_secret"
 ### Running the Server
 
 - **Development Mode** (with hot-reload)
+
   ```bash
   npm run dev
   ```
@@ -117,13 +122,13 @@ GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
 Base URL: `http://localhost:4000/api/v1`
 
-| Feature | Endpoint | Description |
-| :--- | :--- | :--- |
-| **Auth** | `/api/v1/auth/*` | Handled by Better Auth (Sign in, Sign up, Session) |
-| **Users** | `/api/v1/users` | User management endpoints |
-| **Tutors** | `/api/v1/tutors` | Public tutor listings and profile retrieval |
-| **Bookings** | `/api/v1/bookings` | Booking creation and management |
+| Feature      | Endpoint           | Description                                        |
+| :----------- | :----------------- | :------------------------------------------------- |
+| **Auth**     | `/api/v1/auth/*`   | Handled by Better Auth (Sign in, Sign up, Session) |
+| **Users**    | `/api/v1/users`    | User management endpoints                          |
+| **Tutors**   | `/api/v1/tutors`   | Public tutor listings and profile retrieval        |
+| **Bookings** | `/api/v1/bookings` | Booking creation and management                    |
 
 ---
 
-*Developed for Programming Hero Next Level Development - First Full Stack Assignment.*
+_Developed for Programming Hero Next Level Development - First Full Stack Assignment._
