@@ -18,7 +18,15 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirectURI: "http://localhost:4000/api/v1/auth/callback/google",
+      // redirectURI: "http://localhost:4000/api/v1/auth/callback/google",
+    },
+  },
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+      },
     },
   },
   trustedOrigins: ["http://localhost:3000"],

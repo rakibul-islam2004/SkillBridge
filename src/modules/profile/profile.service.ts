@@ -15,18 +15,14 @@ export const ProfileService = {
 
     switch (role) {
       case "STUDENT":
-        return prisma.studentProfile.upsert({
+        return prisma.studentProfile.findUnique({
           where: { userId },
-          update: {},
-          create: { userId },
-          include: { bookings: true }, // Example: include relations
+          include: { bookings: true },
         });
 
       case "TUTOR":
-        return prisma.tutorProfile.upsert({
+        return prisma.tutorProfile.findUnique({
           where: { userId },
-          update: {},
-          create: { userId },
           include: {
             tutorCategories: { include: { category: true } },
             pricings: true,
@@ -34,10 +30,8 @@ export const ProfileService = {
         });
 
       case "ADMIN":
-        return prisma.admin.upsert({
+        return prisma.admin.findUnique({
           where: { userId },
-          update: {},
-          create: { userId },
         });
 
       default:
@@ -92,30 +86,45 @@ export const ProfileService = {
   // ---------------- Role Onboarding ----------------
   async initializeRole(userId: string, role: "STUDENT" | "TUTOR") {
     return await prisma.$transaction(async (tx) => {
-      // 1. Check if the user already has a profile to prevent errors
-      const [existingStudent, existingTutor] = await Promise.all([
+      // 1. Fetch current status
+      const [user, existingStudent, existingTutor] = await Promise.all([
+        tx.user.findUnique({ where: { id: userId } }),
         tx.studentProfile.findUnique({ where: { userId } }),
         tx.tutorProfile.findUnique({ where: { userId } }),
       ]);
 
-      if (existingStudent || existingTutor) {
-        throw new Error("User already has an assigned profile.");
+      if (!user) throw new Error("User not found");
+
+      // 2. Identify already existing profile
+      const currentProfile = existingStudent || existingTutor;
+
+      // 3. Conflict Check: If user already has a DIFFERENT role
+      if (currentProfile) {
+        const existingRole = existingStudent ? "STUDENT" : "TUTOR";
+        if (existingRole !== role) {
+          throw new Error(`Conflict: User already has a ${existingRole} profile.`);
+        }
+        // If it's the SAME role, we'll just ensure the session role is synced below
       }
 
-      // 2. Create the profile based on the selected role
-      if (role === "STUDENT") {
-        return tx.studentProfile.create({
-          data: { userId },
-        });
-      } else {
-        return tx.tutorProfile.create({
-          data: {
-            userId,
-            isActive: true,
-            ratingAvg: 0,
-          },
-        });
+      // 4. Update core User role for session synchronization (Fixes the loop)
+      await tx.user.update({
+        where: { id: userId },
+        data: { role },
+      });
+
+      // 5. Create specific Profile only if it doesn't exist
+      if (!currentProfile) {
+        if (role === "STUDENT") {
+          await tx.studentProfile.create({ data: { userId } });
+        } else {
+          await tx.tutorProfile.create({
+            data: { userId, isActive: true, ratingAvg: 0 },
+          });
+        }
       }
+
+      return { success: true, role };
     });
   },
 };

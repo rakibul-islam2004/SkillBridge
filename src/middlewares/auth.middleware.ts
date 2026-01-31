@@ -30,7 +30,6 @@ export const authMiddleware = async (
     });
 
     if (!session) return res.status(401).json({ message: "Unauthorized" });
-
     const { user } = session;
 
     const [student, tutor, admin] = await Promise.all([

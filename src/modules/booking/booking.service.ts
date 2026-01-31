@@ -88,7 +88,7 @@ export const BookingService = {
 
       // Generate Workable Jitsi link
       const roomName = `SB-${data.tutorId.slice(0, 8)}-${data.availabilityId.slice(0, 8)}`;
-      const meetingLink = `https://meet.jit.si{roomName}`;
+      const meetingLink = `https://meet.jit.si/${roomName}`;
 
       const booking = await tx.booking.create({
         data: {

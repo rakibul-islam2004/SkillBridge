@@ -6,21 +6,21 @@ import { auth } from "./lib/auth";
 import { email } from "better-auth";
 
 const app = express();
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   }),
 );
 
+app.use(express.json());
+
 // better auth router
 app.all("/api/v1/auth/*splat", toNodeHandler(auth));
 
-app.use(express.json());
-
-app.use(cors());
-
 app.use("/api/v1", routes);
+
 app.get("/", (req, res) => {
   res.send({ message: "server running" });
 });
