@@ -80,4 +80,20 @@ export const TutorController = {
       res.status(500).json({ message: "Failed to fetch calendar blocks" });
     }
   },
+
+  async deleteAvailability(req: Request, res: Response) {
+    try {
+      const { id: userId } = req.user!;
+      const { availabilityId } = req.params;
+
+      if (!availabilityId) {
+        return res.status(400).json({ message: "Availability ID is required" });
+      }
+
+      await TutorService.deleteAvailability(userId, availabilityId);
+      res.json({ message: "Availability slot removed" });
+    } catch (err: any) {
+      res.status(400).json({ error: err.message || "Failed to delete slot" });
+    }
+  },
 };

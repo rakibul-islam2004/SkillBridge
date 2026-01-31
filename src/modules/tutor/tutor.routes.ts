@@ -11,5 +11,6 @@ router.post("/setup", TutorController.setupTutor);
 
 // For calendar UI
 router.get("/calendar", TutorController.getCalendar);
+router.delete("/availability/:availabilityId", TutorController.deleteAvailability);
 
 export default router;

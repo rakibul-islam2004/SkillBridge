@@ -68,6 +68,18 @@ export const TutorService = {
     });
   },
 
+  // 3b. Delete Availability
+  async deleteAvailability(userId: string, availabilityId: string) {
+    return await prisma.$transaction([
+      prisma.calendarBlock.deleteMany({
+        where: { availabilityId, userId },
+      }),
+      prisma.tutorAvailability.delete({
+        where: { id: availabilityId },
+      }),
+    ]);
+  },
+
   // 4. Get Dashboard: Profile details
   async getTutorFullProfile(userId: string) {
     return prisma.tutorProfile.findUnique({
