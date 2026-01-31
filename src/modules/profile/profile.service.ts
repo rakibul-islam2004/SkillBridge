@@ -87,24 +87,27 @@ export const ProfileService = {
   async initializeRole(userId: string, role: "STUDENT" | "TUTOR") {
     return await prisma.$transaction(async (tx) => {
       // 1. Fetch current status
-      const [user, existingStudent, existingTutor] = await Promise.all([
+      const [user, existingStudent, existingTutor, existingAdmin] = await Promise.all([
         tx.user.findUnique({ where: { id: userId } }),
         tx.studentProfile.findUnique({ where: { userId } }),
         tx.tutorProfile.findUnique({ where: { userId } }),
+        tx.admin.findUnique({ where: { userId } }),
       ]);
 
       if (!user) throw new Error("User not found");
 
       // 2. Identify already existing profile
-      const currentProfile = existingStudent || existingTutor;
+      const currentProfile = existingStudent || existingTutor || existingAdmin;
 
-      // 3. Conflict Check: If user already has a DIFFERENT role
+      // 3. Conflict Check
       if (currentProfile) {
-        const existingRole = existingStudent ? "STUDENT" : "TUTOR";
+        let existingRole: string = "STUDENT";
+        if (existingTutor) existingRole = "TUTOR";
+        if (existingAdmin) existingRole = "ADMIN";
+
         if (existingRole !== role) {
           throw new Error(`Conflict: User already has a ${existingRole} profile.`);
         }
-        // If it's the SAME role, we'll just ensure the session role is synced below
       }
 
       // 4. Update core User role for session synchronization (Fixes the loop)
