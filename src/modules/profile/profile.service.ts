@@ -43,33 +43,47 @@ export const ProfileService = {
   async update(ctx: Context, data: any) {
     const { userId, role } = ctx;
 
-    switch (role) {
-      case "STUDENT":
-        return prisma.studentProfile.update({
-          where: { userId },
-          data: { bio: data.bio },
-        });
-
-      case "TUTOR":
-        return prisma.tutorProfile.update({
-          where: { userId },
-          data: {
-            bio: data.bio,
-            experience: data.experience,
-            experienceDetails: data.experienceDetails,
-            isActive: data.isActive,
+    return await prisma.$transaction(async (tx) => {
+      // 1. Update core user data if provided (e.g. name, image)
+      if (data.name || data.image) {
+        await tx.user.update({
+          where: { id: userId },
+          data: { 
+            name: data.name,
+            image: data.image
           },
         });
+      }
 
-      case "ADMIN":
-        return prisma.admin.update({
-          where: { userId },
-          data: { isActive: data.isActive },
-        });
+      // 2. Update role-specific profile
+      switch (role) {
+        case "STUDENT":
+          return tx.studentProfile.update({
+            where: { userId },
+            data: { bio: data.bio },
+          });
 
-      default:
-        throw new Error("Invalid role");
-    }
+        case "TUTOR":
+          return tx.tutorProfile.update({
+            where: { userId },
+            data: {
+              bio: data.bio,
+              experience: data.experience,
+              experienceDetails: data.experienceDetails,
+              isActive: data.isActive,
+            },
+          });
+
+        case "ADMIN":
+          return tx.admin.update({
+            where: { userId },
+            data: { isActive: data.isActive },
+          });
+
+        default:
+          throw new Error("Invalid role");
+      }
+    });
   },
 
   // ---------------- BETTER AUTH PASSWORD ----------------

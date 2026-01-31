@@ -14,6 +14,14 @@ export const TutorService = {
     ]);
   },
 
+  // 1b. Update Profile: Experience & Bio
+  async updateProfile(tutorId: string, data: { experience?: number; experienceDetails?: string; bio?: string }) {
+    return await prisma.tutorProfile.update({
+      where: { id: tutorId },
+      data,
+    });
+  },
+
   // 2. Pricing: Add new pricing entry
   async addPricing(tutorId: string, data: { duration: number; price: number }) {
     return prisma.tutorPricing.create({

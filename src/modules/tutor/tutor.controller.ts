@@ -5,10 +5,19 @@ export const TutorController = {
   async setupTutor(req: Request, res: Response) {
     try {
       const { tutorId, id: userId } = req.user!;
-      const { categoryIds, pricings, availabilitySlots } = req.body;
+      const { categoryIds, pricings, availabilitySlots, experience, experienceDetails } = req.body;
 
       if (!tutorId) {
         return res.status(403).json({ message: "Tutor profile not found" });
+      }
+
+      // 0. Update Professional Details
+      const updateData: any = {};
+      if (experience !== undefined) updateData.experience = parseInt(experience as string);
+      if (experienceDetails !== undefined) updateData.experienceDetails = experienceDetails;
+
+      if (Object.keys(updateData).length > 0) {
+        await TutorService.updateProfile(tutorId, updateData);
       }
 
       // 1. Update Categories

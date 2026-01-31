@@ -2,31 +2,20 @@ import { hashPassword } from "better-auth/crypto";
 import { prisma } from "../src/lib/prisma.js";
 
 async function main() {
-  const categories = [
-    "Web Development",
-    "Mathematics",
-    "Physics",
-    "English",
-    "Data Science",
-  ];
+  const adminEmail = "mdrakibul@gmail.com";
+  const hashedPassword = await hashPassword("Admin1234");
 
-  for (const name of categories) {
-    const category = await prisma.category.upsert({
-      where: { name },
-      update: {},
-      create: { name },
-    });
-  }
-
-  const adminEmail = "mdrakibandrokib@gmail.com";
-  const hashedPassword = await hashPassword("admin1234");
-
-  const admin = await prisma.user.upsert({
+  // Seed Admin
+  await prisma.user.upsert({
     where: { email: adminEmail },
-    update: {},
+    update: {
+      role: "ADMIN",
+      emailVerified: true,
+    },
     create: {
       name: "Rakibul",
       email: adminEmail,
+      role: "ADMIN",
       emailVerified: true,
       adminProfile: { create: { isActive: true } },
       accounts: {
@@ -39,14 +28,31 @@ async function main() {
       },
     },
   });
+
+  // Seed Categories
+  const categories = [
+    "Web Development",
+    "Mathematics",
+    "Physics",
+    "English",
+    "Data Science",
+  ];
+
+  for (const name of categories) {
+    await prisma.category.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
 }
 
 main()
   .then(async () => {
-    console.log("🏁 Seed execution finished.");
     await prisma.$disconnect();
   })
   .catch(async (e) => {
+    console.error(e);
     await prisma.$disconnect();
     process.exit(1);
   });
