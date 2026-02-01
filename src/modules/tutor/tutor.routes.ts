@@ -6,7 +6,7 @@ const router = Router();
 
 router.use(authMiddleware);
 
-router.get("/dashboard", TutorController.getMySchedule);
+router.get("/dashboard", TutorController.getDashboardData);
 router.post("/setup", TutorController.setupTutor);
 
 // For calendar UI

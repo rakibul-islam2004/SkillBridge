@@ -11,7 +11,6 @@ export const TutorController = {
         return res.status(403).json({ message: "Tutor profile not found" });
       }
 
-      // 0. Update Professional Details
       const updateData: any = {};
       if (experience !== undefined) updateData.experience = parseInt(experience as string);
       if (experienceDetails !== undefined) updateData.experienceDetails = experienceDetails;
@@ -90,10 +89,19 @@ export const TutorController = {
         return res.status(400).json({ message: "Availability ID is required" });
       }
 
-      await TutorService.deleteAvailability(userId, availabilityId);
+      await TutorService.deleteAvailability(userId, availabilityId as string);
       res.json({ message: "Availability slot removed" });
     } catch (err: any) {
       res.status(400).json({ error: err.message || "Failed to delete slot" });
+    }
+  },
+
+  async getDashboardData(req: Request, res: Response) {
+    try {
+      const data = await TutorService.getDashboardOverview(req.user!.id);
+      res.json(data);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message || "Failed to fetch dashboard data" });
     }
   },
 };
