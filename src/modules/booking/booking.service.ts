@@ -7,15 +7,33 @@ export const BookingService = {
     search?: string | undefined;
     minPrice?: number | undefined;
     maxPrice?: number | undefined;
+    sortBy?: string | undefined;
   }) {
     const where: any = { isActive: true };
+    let orderBy: any = {};
+
+    if (filters.sortBy === "rating-desc") {
+      orderBy = { ratingAvg: "desc" };
+    } else if (filters.sortBy === "price-asc") {
+      // Note: Prisma ordering by relation aggregate is limited. 
+      // We'll use id as a secondary sort. 
+      // In a real app, startingPrice would be denormalized.
+      orderBy = { createdAt: "asc" }; 
+    } else {
+      orderBy = { createdAt: "desc" };
+    }
 
     if (filters.categoryId) {
       where.tutorCategories = { some: { categoryId: filters.categoryId } };
     }
 
     if (filters.search) {
-      where.user = { name: { contains: filters.search, mode: "insensitive" } };
+      where.OR = [
+        { user: { name: { contains: filters.search, mode: "insensitive" } } },
+        { bio: { contains: filters.search, mode: "insensitive" } },
+        { experienceDetails: { contains: filters.search, mode: "insensitive" } },
+        { tutorCategories: { some: { category: { name: { contains: filters.search, mode: "insensitive" } } } } }
+      ];
     }
 
     if (filters.minPrice || filters.maxPrice) {
@@ -32,11 +50,13 @@ export const BookingService = {
 
     return prisma.tutorProfile.findMany({
       where,
+      orderBy,
       include: {
         user: { select: { name: true, image: true } },
         tutorCategories: { include: { category: true } },
         pricings: { where: { isActive: true } },
         reviews: { select: { rating: true } },
+        _count: { select: { reviews: true } },
       },
     });
   },
@@ -58,7 +78,18 @@ export const BookingService = {
           orderBy: { createdAt: "desc" },
         },
         availabilities: {
-          where: { startTime: { gte: new Date() }, bookings: { none: {} } },
+          where: { 
+            startTime: { gte: new Date() },
+            deletedAt: null,
+          },
+          include: {
+            bookings: {
+              where: {
+                status: { in: ["CONFIRMED", "PENDING"] }
+              },
+              select: { id: true, status: true }
+            }
+          },
           orderBy: { startTime: "asc" },
         },
       },
@@ -139,8 +170,8 @@ export const BookingService = {
     });
   },
 
-  // fetch featured product
-  async getFeatured() {
+  // Get ONLY manually featured tutors (returns empty if none)
+  async getFeaturedOnly() {
     return prisma.tutorProfile.findMany({
       where: {
         isActive: true,
@@ -151,8 +182,56 @@ export const BookingService = {
       include: {
         user: { select: { name: true, image: true } },
         tutorCategories: { include: { category: true } },
+        pricings: { where: { isActive: true } },
+        reviews: { select: { rating: true } },
+        _count: { select: { reviews: true } },
       },
     });
+  },
+
+  // Get top-rated tutors (always returns results if tutors exist)
+  async getTopRated() {
+    return prisma.tutorProfile.findMany({
+      where: { 
+        isActive: true,
+      },
+      take: 6,
+      orderBy: [{ ratingAvg: "desc" }, { createdAt: "desc" }],
+      include: {
+        user: { select: { name: true, image: true } },
+        tutorCategories: { include: { category: true } },
+        pricings: { where: { isActive: true } },
+        reviews: { select: { rating: true } },
+        _count: { select: { reviews: true } },
+      },
+    });
+  },
+
+  // Legacy method - returns featured OR top-rated (for backward compatibility)
+  async getFeatured() {
+    const featuredTutors = await this.getFeaturedOnly();
+    
+    if (featuredTutors.length >= 6) return featuredTutors;
+
+    // Fill the rest with top rated tutors
+    const featuredIds = featuredTutors.map((t) => t.id);
+    const fillerTutors = await prisma.tutorProfile.findMany({
+      where: { 
+        isActive: true,
+        id: { notIn: featuredIds }
+      },
+      take: 6 - featuredTutors.length,
+      orderBy: [{ ratingAvg: "desc" }, { createdAt: "desc" }],
+      include: {
+        user: { select: { name: true, image: true } },
+        tutorCategories: { include: { category: true } },
+        pricings: { where: { isActive: true } },
+        reviews: { select: { rating: true } },
+        _count: { select: { reviews: true } },
+      },
+    });
+
+    return [...featuredTutors, ...fillerTutors];
   },
 
   async cancelBooking(bookingId: string, reason: string) {

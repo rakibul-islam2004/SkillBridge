@@ -10,9 +10,9 @@ const routes = Router();
 
 routes.use("/profile", profileRoutes);
 routes.use("/tutor", tutorRoutes);
-routes.use("/bookings", bookingRoutes);
+routes.use("/booking", bookingRoutes); // Changed from /bookings to /booking
 routes.use("/notifications", notificationRoutes);
 routes.use("/admin", adminRoutes);
-routes.use("/categories", categoryRoutes);
+routes.use("/category", categoryRoutes); // Changed from /categories to /category
 
 export default routes;

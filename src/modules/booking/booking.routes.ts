@@ -6,6 +6,8 @@ const router = Router();
 
 // PUBLIC
 router.get("/featured-tutors", BookingController.listFeatured);
+router.get("/featured-tutors-only", BookingController.listFeaturedOnly);
+router.get("/top-rated-tutors", BookingController.listTopRated);
 router.get("/tutors", BookingController.listTutors);
 router.get("/tutors/:id", BookingController.getTutorProfile);
 

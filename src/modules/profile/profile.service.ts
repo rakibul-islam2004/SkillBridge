@@ -26,6 +26,9 @@ export const ProfileService = {
           include: {
             tutorCategories: { include: { category: true } },
             pricings: true,
+            availabilities: {
+              orderBy: { startTime: "asc" },
+            },
           },
         });
 

@@ -4,13 +4,14 @@ import { BookingService } from "./booking.service";
 export const BookingController = {
   async listTutors(req: Request, res: Response) {
     try {
-      const { categoryId, search, minPrice, maxPrice } = req.query;
+      const { categoryId, search, minPrice, maxPrice, sortBy } = req.query;
 
       const tutors = await BookingService.findTutors({
         categoryId: categoryId as string | undefined,
         search: search as string | undefined,
         minPrice: minPrice ? Number(minPrice) : undefined,
         maxPrice: maxPrice ? Number(maxPrice) : undefined,
+        sortBy: sortBy as string | undefined,
       });
 
       res.json(tutors);
@@ -47,6 +48,18 @@ export const BookingController = {
   // Fetch featured tutors
   async listFeatured(req: Request, res: Response) {
     const tutors = await BookingService.getFeatured();
+    res.json({ success: true, data: tutors });
+  },
+
+  // Fetch ONLY manually featured tutors (empty if none)
+  async listFeaturedOnly(req: Request, res: Response) {
+    const tutors = await BookingService.getFeaturedOnly();
+    res.json({ success: true, data: tutors });
+  },
+
+  // Fetch top-rated tutors (always has results if tutors exist)
+  async listTopRated(req: Request, res: Response) {
+    const tutors = await BookingService.getTopRated();
     res.json({ success: true, data: tutors });
   },
 

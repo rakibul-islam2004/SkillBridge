@@ -88,7 +88,7 @@ export const TutorService = {
         tutorCategories: { include: { category: true } },
         pricings: { where: { isActive: true } },
         availabilities: {
-          where: { startTime: { gte: new Date() } },
+          where: { startTime: { gte: new Date(new Date().getTime() - 24 * 60 * 60 * 1000) } }, // Show slots from last 24h for management
           orderBy: { startTime: "asc" },
         },
       },
