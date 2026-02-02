@@ -12,6 +12,7 @@ export const AdminService = {
           select: {
             id: true,
             isActive: true,
+            isFeatured: true,
             createdAt: true,
             ratingAvg: true,
           },

@@ -34,6 +34,9 @@ export const AdminController = {
     if (!tutorId || typeof tutorId !== "string") {
       return res.status(400).json({ message: "Invalid Tutor ID" });
     }
+    if (typeof isFeatured !== "boolean") {
+      return res.status(400).json({ message: "isFeatured must be a boolean" });
+    }
 
     try {
       const result = await AdminService.toggleFeatured(tutorId, isFeatured);
