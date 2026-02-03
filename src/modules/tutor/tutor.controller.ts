@@ -60,7 +60,7 @@ export const TutorController = {
     try {
       const blocks = await TutorService.getCalendarView(req.user!.id);
 
-      const events = blocks.map((block) => ({
+      const events = blocks.map((block: any) => ({
         id: block.id,
         title: block.booking
           ? `Lesson with ${block.booking.student.user.name}`

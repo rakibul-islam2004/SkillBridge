@@ -103,7 +103,7 @@ export const BookingService = {
     pricingId: string;
     availabilityId: string;
   }) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // Conflict Prevention
       const existing = await tx.booking.findFirst({
         where: {
@@ -214,7 +214,7 @@ export const BookingService = {
     if (featuredTutors.length >= 6) return featuredTutors;
 
     // Fill the rest with top rated tutors
-    const featuredIds = featuredTutors.map((t) => t.id);
+    const featuredIds = featuredTutors.map((t: any) => t.id);
     const fillerTutors = await prisma.tutorProfile.findMany({
       where: { 
         isActive: true,
@@ -235,7 +235,7 @@ export const BookingService = {
   },
 
   async cancelBooking(bookingId: string, reason: string) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const updatedBooking = await tx.booking.update({
         where: { id: bookingId },
         data: {
@@ -261,7 +261,7 @@ export const BookingService = {
     rating: number;
     comment: string;
   }) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const review = await tx.review.create({ data });
 
       await tx.booking.update({
@@ -328,7 +328,7 @@ export const BookingService = {
 
   // MARK BOOKING AS COMPLETED: Tutor or Admin can manually mark a session as completed
   async markBookingCompleted(bookingId: string, userId: string, userRole: string) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: {

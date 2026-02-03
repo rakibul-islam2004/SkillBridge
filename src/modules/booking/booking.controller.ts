@@ -116,7 +116,7 @@ export const BookingController = {
       }
 
       const booking = await BookingService.markBookingCompleted(
-        id,
+        id as string,
         req.user!.id,
         req.user!.role || "",
       );

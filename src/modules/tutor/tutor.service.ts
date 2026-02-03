@@ -39,7 +39,7 @@ export const TutorService = {
     tutorId: string,
     slots: { start: Date; end: Date }[],
   ) {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       const createdSlots = [];
 
       for (const slot of slots) {
@@ -161,7 +161,7 @@ export const TutorService = {
       include: { pricing: { select: { price: true } } }
     });
     
-    const earnings = completedBookings.reduce((sum, b) => sum + Number(b.pricing.price), 0);
+    const earnings = completedBookings.reduce((sum: number, b: any) => sum + Number(b.pricing.price), 0);
     const reviewCount = await prisma.review.count({ where: { tutorId } });
 
     return {

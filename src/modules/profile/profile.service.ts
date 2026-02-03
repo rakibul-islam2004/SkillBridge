@@ -46,7 +46,7 @@ export const ProfileService = {
   async update(ctx: Context, data: any) {
     const { userId, role } = ctx;
 
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // 1. Update core user data if provided (e.g. name, image)
       if (data.name || data.image) {
         await tx.user.update({
@@ -102,7 +102,7 @@ export const ProfileService = {
 
   // ---------------- Role Onboarding ----------------
   async initializeRole(userId: string, role: "STUDENT" | "TUTOR") {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: any) => {
       // 1. Fetch current status
       const [user, existingStudent, existingTutor, existingAdmin] = await Promise.all([
         tx.user.findUnique({ where: { id: userId } }),
