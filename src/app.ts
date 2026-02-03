@@ -2,7 +2,7 @@ import express from "express"; // redeploy-trigger-3
 import cors from "cors";
 import routes from "./routes/index.js";
 import { toNodeHandler } from "better-auth/node";
-import { auth } from "./lib/auth";
+import { auth } from "./lib/auth.js";
 import { email } from "better-auth";
 
 const app = express();
