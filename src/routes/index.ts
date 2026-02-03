@@ -1,10 +1,10 @@
 import { Router } from "express";
-import profileRoutes from "../modules/profile/profile.routes";
-import tutorRoutes from "../modules/tutor/tutor.routes";
-import bookingRoutes from "../modules/booking/booking.routes";
+import profileRoutes from "../modules/profile/profile.routes.js";
+import tutorRoutes from "../modules/tutor/tutor.routes.js";
+import bookingRoutes from "../modules/booking/booking.routes.js";
 import notificationRoutes from "../modules/notification/notification.routes.js";
-import adminRoutes from "../modules/admin/admin.routes";
-import categoryRoutes from "../modules/category/category.routes";
+import adminRoutes from "../modules/admin/admin.routes.js";
+import categoryRoutes from "../modules/category/category.routes.js";
 
 const routes = Router();
 

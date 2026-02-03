@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import routes from "./routes";
+import routes from "./routes/index.js";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { email } from "better-auth";

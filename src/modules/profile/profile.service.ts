@@ -1,5 +1,5 @@
-import { prisma } from "../../lib/prisma";
-import { auth as betterAuth } from "../../lib/auth";
+import { prisma } from "../../lib/prisma.js";
+import { auth as betterAuth } from "../../lib/auth.js";
 
 type Role = "STUDENT" | "TUTOR" | "ADMIN";
 

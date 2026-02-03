@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { AdminService } from "./admin.service";
+import { AdminService } from "./admin.service.js";
 
 export const AdminController = {
   async listUsers(req: Request, res: Response) {

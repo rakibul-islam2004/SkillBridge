@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { TutorService } from "./tutor.service";
+import { TutorService } from "./tutor.service.js";
 
 export const TutorController = {
   async setupTutor(req: Request, res: Response) {

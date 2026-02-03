@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ProfileService } from "./profile.service";
+import { ProfileService } from "./profile.service.js";
 
 export const ProfileController = {
   async getMe(req: Request, res: Response) {

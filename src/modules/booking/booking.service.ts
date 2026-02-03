@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma";
+import { prisma } from "../../lib/prisma.js";
 
 export const BookingService = {
   // DISCOVERY: Search with Price, Rating, and Category filters

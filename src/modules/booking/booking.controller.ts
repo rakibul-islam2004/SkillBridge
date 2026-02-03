@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { BookingService } from "./booking.service";
+import { BookingService } from "./booking.service.js";
 
 export const BookingController = {
   async listTutors(req: Request, res: Response) {
