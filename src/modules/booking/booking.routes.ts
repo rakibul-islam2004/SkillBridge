@@ -17,5 +17,6 @@ router.get("/my-bookings", BookingController.myBookings);
 router.post("/confirm", BookingController.confirmBooking);
 router.post("/review", BookingController.submitReview);
 router.patch("/:id/cancel", BookingController.cancelBooking);
+router.patch("/:id/complete", BookingController.markCompleted);
 
 export default router;

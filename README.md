@@ -22,6 +22,8 @@ Welcome to the **SkillBridge** backend repository. This is a comprehensive backe
 
 SkillBridge is built with scalability and performance in mind. It utilizes a modern tech stack to handle authentication, user profile management (Students, Tutors, Admins), and complex scheduling logic including calendar blocking and recurring availabilities.
 
+- [Live Website](https://skill-bridge-client.vercel.app)
+
 ## 📊 ER Diagram
 
 Here is the Entity-Relationship logic that powers SkillBridge's data architecture:
@@ -67,7 +69,7 @@ Follow these steps to set up the project locally.
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/rakibul-islam2004/SkillBridge.git
    cd SkillBridge
    ```
 
@@ -106,7 +108,7 @@ GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
 ### Running the Server
 
-- **Development Mode** (with hot-reload)
+- **Development Mode** 
 
   ```bash
   npm run dev
@@ -128,6 +130,13 @@ Base URL: `http://localhost:4000/api/v1`
 | **Users**    | `/api/v1/users`    | User management endpoints                          |
 | **Tutors**   | `/api/v1/tutors`   | Public tutor listings and profile retrieval        |
 | **Bookings** | `/api/v1/bookings` | Booking creation and management                    |
+
+---
+
+## 🔗 Related Repositories
+
+- [Frontend Repository](https://github.com/rakibul-islam2004/skill-bridge-client)
+
 
 ---
 

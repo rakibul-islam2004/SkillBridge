@@ -107,4 +107,22 @@ export const BookingController = {
       res.status(500).json({ message: "Server error" });
     }
   },
+
+  async markCompleted(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        return res.status(400).json({ message: "Booking ID is required" });
+      }
+
+      const booking = await BookingService.markBookingCompleted(
+        id,
+        req.user!.id,
+        req.user!.role || "",
+      );
+      res.json({ success: true, message: "Session marked as completed", data: booking });
+    } catch (err: any) {
+      res.status(400).json({ success: false, message: err.message });
+    }
+  },
 };

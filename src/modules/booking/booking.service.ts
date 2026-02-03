@@ -303,6 +303,17 @@ export const BookingService = {
     if (studentId) conditions.push({ studentId });
     if (tutorId) conditions.push({ tutorId });
 
+    // Auto-complete past CONFIRMED sessions (session endTime passed more than 1 hour ago)
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    await prisma.booking.updateMany({
+      where: {
+        ...(conditions.length > 0 ? { OR: conditions } : {}),
+        status: "CONFIRMED",
+        endTime: { lt: oneHourAgo },
+      },
+      data: { status: "COMPLETED" },
+    });
+
     return prisma.booking.findMany({
       where: conditions.length > 0 ? { OR: conditions } : {},
       include: {
@@ -312,6 +323,58 @@ export const BookingService = {
         review: true,
       },
       orderBy: { startTime: "desc" },
+    });
+  },
+
+  // MARK BOOKING AS COMPLETED: Tutor or Admin can manually mark a session as completed
+  async markBookingCompleted(bookingId: string, userId: string, userRole: string) {
+    return await prisma.$transaction(async (tx) => {
+      const booking = await tx.booking.findUnique({
+        where: { id: bookingId },
+        include: {
+          tutor: {
+            include: {
+              user: { select: { name: true } },
+            },
+          },
+          student: { select: { userId: true } },
+        },
+      });
+
+      if (!booking) {
+        throw new Error("Booking not found");
+      }
+
+      // Check permissions: Tutor can only mark their own bookings, Admin can mark any
+      if (userRole === "TUTOR" && booking.tutor.userId !== userId) {
+        throw new Error("You can only mark your own sessions as completed");
+      }
+
+      if (booking.status === "COMPLETED") {
+        throw new Error("This session is already marked as completed");
+      }
+
+      if (booking.status === "CANCELLED") {
+        throw new Error("Cannot mark a cancelled session as completed");
+      }
+
+      const updatedBooking = await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: "COMPLETED" },
+      });
+
+      // Notify student that session was completed
+      await tx.notification.create({
+        data: {
+          userId: booking.student.userId,
+          type: "booking_completed",
+          title: "Session Completed",
+          message: `Your session with ${booking.tutor.user.name} has been marked as completed.`,
+          relatedBookingId: bookingId,
+        },
+      });
+
+      return updatedBooking;
     });
   },
 };
