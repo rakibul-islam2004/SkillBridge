@@ -2,7 +2,6 @@
 
 Welcome to the **SkillBridge** backend repository. This is a comprehensive backend solution designed to bridge the gap between students and tutors, facilitating seamless booking, scheduling, and learning experiences.
 
-## 📋 Table of Contents
 
 ## 📋 Table of Contents
 
