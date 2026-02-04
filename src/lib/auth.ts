@@ -38,4 +38,9 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: true,
   },
+  cookie: {
+    namePrefix: "better-auth", 
+    sameSite: "none",
+    secure: true,
+  },
 });
