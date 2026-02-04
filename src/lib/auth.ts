@@ -19,7 +19,7 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirectURI: "https://skill-bridge-drab-rho.vercel.app/api/v1/auth/callback/google",
+      redirectURI: "https://skill-bridge-client-five.vercel.app/api/v1/auth/callback/google",
     },
   },
   user: {
