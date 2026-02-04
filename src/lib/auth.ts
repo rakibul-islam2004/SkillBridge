@@ -33,6 +33,7 @@ export const auth = betterAuth({
   trustedOrigins: [
     process.env.FRONTEND_URL as string,
     "https://skill-bridge-client-five.vercel.app",
+    "https://skill-bridge-client-git-main-rakibuls-projects-2d528a38.vercel.app",
   ],
   plugins: [oAuthProxy()],
   advanced: {

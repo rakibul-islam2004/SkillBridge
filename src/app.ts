@@ -7,9 +7,23 @@ import { email } from "better-auth";
 
 const app = express();
 
+app.set("trust proxy", true);
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://skill-bridge-client-five.vercel.app",
+].filter(Boolean) as string[];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   }),
 );
