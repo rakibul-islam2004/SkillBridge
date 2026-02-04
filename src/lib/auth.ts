@@ -5,7 +5,8 @@ import { oAuthProxy } from "better-auth/plugins";
 
 export const auth = betterAuth({
   appName: "skill bridge",
-  baseURL: process.env.BETTER_AUTH_URL,
+
+  baseURL: process.env.BETTER_AUTH_URL || "https://skill-bridge-client-five.vercel.app",
   basePath: "/api/v1/auth",
 
   database: prismaAdapter(prisma, {
@@ -15,12 +16,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
     },
   },
+
   user: {
     additionalFields: {
       role: {
@@ -29,18 +32,22 @@ export const auth = betterAuth({
       },
     },
   },
+
   trustedOrigins: [
     process.env.FRONTEND_URL as string,
     "https://skill-bridge-client-five.vercel.app",
-    "https://skill-bridge-client-git-main-rakibuls-projects-2d528a38.vercel.app",
   ],
+
   plugins: [oAuthProxy()],
+
   advanced: {
     useSecureCookies: true,
   },
+
   cookie: {
     namePrefix: "better-auth", 
-    sameSite: "none",
+    sameSite: "lax",
     secure: true,
+    httpOnly: true,
   },
 });

@@ -11,7 +11,7 @@ declare global {
         role: "STUDENT" | "TUTOR" | "ADMIN";
         email: string;
         name: string;
-        tutorId?: string | undefined;
+        tutorId?: string | undefined; 
         studentId?: string | undefined;
         adminId?: string | undefined;
       };
@@ -29,7 +29,10 @@ export const authMiddleware = async (
       headers: fromNodeHeaders(req.headers),
     });
 
-    if (!session) return res.status(401).json({ message: "Unauthorized" });
+    if (!session) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
     const { user } = session;
 
     const [student, tutor, admin] = await Promise.all([
@@ -51,18 +54,20 @@ export const authMiddleware = async (
     if (admin) role = "ADMIN";
     else if (tutor) role = "TUTOR";
 
+
     req.user = {
       id: user.id,
       role,
       email: user.email,
       name: user.name,
-      tutorId: tutor?.id,
+      tutorId: tutor?.id,   
       studentId: student?.id,
       adminId: admin?.id,
     };
 
     next();
   } catch (err) {
+    console.error("Auth Error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
