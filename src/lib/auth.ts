@@ -39,4 +39,8 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: true,
   },
+  cookie: {
+    namePrefix: "skill-bridge",
+    sameSite: "lax",
+  },
 });
