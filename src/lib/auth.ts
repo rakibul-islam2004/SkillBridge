@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma.js";
+import { oAuthProxy } from "better-auth/plugins";
 
 export const auth = betterAuth({
   appName: "skill bridge",
@@ -18,7 +19,7 @@ export const auth = betterAuth({
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      // redirectURI: "http://localhost:4000/api/v1/auth/callback/google",
+      redirectURI: "https://skill-bridge-drab-rho.vercel.app/api/v1/auth/callback/google",
     },
   },
   user: {
@@ -29,5 +30,12 @@ export const auth = betterAuth({
       },
     },
   },
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [
+    process.env.FRONTEND_URL as string,
+    "https://skill-bridge-client-five.vercel.app",
+  ],
+  plugins: [oAuthProxy()],
+  advanced: {
+    useSecureCookies: true,
+  },
 });
