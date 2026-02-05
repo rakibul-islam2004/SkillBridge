@@ -21,7 +21,7 @@ Welcome to the **SkillBridge** backend repository. This is a comprehensive backe
 
 SkillBridge is built with scalability and performance in mind. It utilizes a modern tech stack to handle authentication, user profile management (Students, Tutors, Admins), and complex scheduling logic including calendar blocking and recurring availabilities.
 
-- [Live Website](https://skill-bridge-client.vercel.app)
+- [Live Website](https://skill-bridge-client-five.vercel.app)
 
 ## 📊 ER Diagram
 
