@@ -41,6 +41,40 @@ export const PaymentService = {
     customer_email: string;
     customer_phone: string;
   }) {
+    // Check if mock payments are enabled
+    const isDevelopment =
+      process.env.NODE_ENV === "development" ||
+      process.env.MOCK_PAYMENTS === "true";
+
+    if (isDevelopment) {
+      console.log("Development mode: Creating mock payment session");
+
+      const booking = await BookingService.createBooking({
+        studentId: payload.studentId,
+        studentUserId: payload.studentUserId,
+        tutorId: payload.tutorId,
+        pricingId: payload.pricingId,
+        availabilityId: payload.availabilityId,
+        status: "PENDING",
+      });
+
+      const tranId = `MOCK-${booking.id.slice(0, 8)}-${Date.now()}`;
+
+      // Return mock gateway URL that redirects directly to success
+      const mockGatewayUrl = `${frontendUrl}/ssl-commerce/success?bookingId=${booking.id}&tran_id=${tranId}&status=VALID&val_id=MOCK_VAL_${Date.now()}&value_a=${booking.id}&mock=true`;
+
+      return {
+        bookingId: booking.id,
+        tranId,
+        gatewayUrl: mockGatewayUrl,
+        rawResponse: {
+          status: "SUCCESS",
+          mock: true,
+          message: "Development mode: Mock payment session created",
+        },
+      };
+    }
+
     if (!storeId || !storePassword) {
       throw new Error("SSLCommerz credentials are not configured.");
     }
@@ -119,6 +153,8 @@ export const PaymentService = {
     currency?: string | string[];
     value_a?: string | string[];
   }) {
+    console.log("SSLCommerz validation params received:", params);
+
     if (!storeId || !storePassword) {
       throw new Error("SSLCommerz credentials are not configured.");
     }
@@ -139,7 +175,54 @@ export const PaymentService = {
       ? params.value_a[0]
       : params.value_a;
 
+    console.log("Parsed parameters:", {
+      val_id,
+      tran_id,
+      bookingId,
+      amount,
+      currency,
+    });
+
+    // Auto-fill missing parameters for development/testing
+    const isDevelopment =
+      process.env.NODE_ENV === "development" ||
+      process.env.MOCK_PAYMENTS === "true";
+
+    if (isDevelopment && (!val_id || !tran_id || !bookingId)) {
+      console.log("Development mode: Auto-filling missing parameters");
+
+      // Auto-generate missing validation ID
+      const autoValId = val_id || `AUTO_VAL_${Date.now()}`;
+      const autoTranId = tran_id || `AUTO_TRAN_${Date.now()}`;
+      const autoBookingId = bookingId || `AUTO_BOOK_${Date.now()}`;
+
+      console.log("Auto-filled parameters:", {
+        val_id: autoValId,
+        tran_id: autoTranId,
+        bookingId: autoBookingId,
+      });
+
+      // Skip SSLCommerz validation API call in development
+      await BookingService.confirmBooking(autoBookingId);
+
+      return {
+        bookingId: autoBookingId,
+        transactionId: autoTranId,
+        validation: {
+          status: "VALID",
+          autoFilled: true,
+          message: "Development mode: Auto-filled validation",
+        },
+        successRedirect: `${frontendUrl}/ssl-commerce/success?bookingId=${autoBookingId}`,
+      };
+    }
+
     if (!val_id || !tran_id || !bookingId) {
+      console.error("Missing required parameters:", {
+        val_id: !!val_id,
+        tran_id: !!tran_id,
+        bookingId: !!bookingId,
+      });
       throw new Error(
         "SSLCommerz validation request missing required parameters.",
       );
@@ -160,10 +243,13 @@ export const PaymentService = {
       },
     });
 
+    console.log("SSLCommerz validation API response:", response.data);
+
     const data = response.data;
     const valid = data?.status === "VALID" || data?.status === "VALIDATED";
 
     if (!valid) {
+      console.error("SSLCommerz validation failed:", data);
       await BookingService.updateBookingStatus(bookingId, "CANCELLED");
       throw new Error(
         data?.failedreason || data?.status || "SSLCommerz validation failed.",
