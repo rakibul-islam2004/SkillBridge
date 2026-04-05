@@ -15,10 +15,10 @@ export const BookingService = {
     if (filters.sortBy === "rating-desc") {
       orderBy = { ratingAvg: "desc" };
     } else if (filters.sortBy === "price-asc") {
-      // Note: Prisma ordering by relation aggregate is limited. 
-      // We'll use id as a secondary sort. 
+      // Note: Prisma ordering by relation aggregate is limited.
+      // We'll use id as a secondary sort.
       // In a real app, startingPrice would be denormalized.
-      orderBy = { createdAt: "asc" }; 
+      orderBy = { createdAt: "asc" };
     } else {
       orderBy = { createdAt: "desc" };
     }
@@ -31,8 +31,18 @@ export const BookingService = {
       where.OR = [
         { user: { name: { contains: filters.search, mode: "insensitive" } } },
         { bio: { contains: filters.search, mode: "insensitive" } },
-        { experienceDetails: { contains: filters.search, mode: "insensitive" } },
-        { tutorCategories: { some: { category: { name: { contains: filters.search, mode: "insensitive" } } } } }
+        {
+          experienceDetails: { contains: filters.search, mode: "insensitive" },
+        },
+        {
+          tutorCategories: {
+            some: {
+              category: {
+                name: { contains: filters.search, mode: "insensitive" },
+              },
+            },
+          },
+        },
       ];
     }
 
@@ -78,17 +88,17 @@ export const BookingService = {
           orderBy: { createdAt: "desc" },
         },
         availabilities: {
-          where: { 
+          where: {
             startTime: { gte: new Date() },
             deletedAt: null,
           },
           include: {
             bookings: {
               where: {
-                status: { in: ["CONFIRMED", "PENDING"] }
+                status: { in: ["CONFIRMED", "PENDING"] },
               },
-              select: { id: true, status: true }
-            }
+              select: { id: true, status: true },
+            },
           },
           orderBy: { startTime: "asc" },
         },
@@ -102,6 +112,7 @@ export const BookingService = {
     tutorId: string;
     pricingId: string;
     availabilityId: string;
+    status?: string;
   }) {
     return await prisma.$transaction(async (tx: any) => {
       // Conflict Prevention
@@ -129,40 +140,106 @@ export const BookingService = {
           availabilityId: data.availabilityId,
           startTime: slot.startTime,
           endTime: slot.endTime,
-          status: "CONFIRMED",
+          status: data.status || "CONFIRMED",
           meetingLink,
           meetingLinkType: "jitsi-meet",
         },
       });
 
-      const tutor = await tx.tutorProfile.findUnique({
-        where: { id: data.tutorId },
-        select: { userId: true },
+      if (data.status !== "PENDING") {
+        const tutor = await tx.tutorProfile.findUnique({
+          where: { id: data.tutorId },
+          select: { userId: true },
+        });
+
+        await tx.notification.create({
+          data: {
+            userId: tutor!.userId,
+            type: "booking_confirmed",
+            title: "New Booking!",
+            message: `A student has booked a session for ${slot.startTime.toLocaleString()}.`,
+            relatedBookingId: booking.id,
+          },
+        });
+
+        await tx.calendarBlock.create({
+          data: {
+            userId: data.studentUserId,
+            availabilityId: data.availabilityId,
+            bookingId: booking.id,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            type: "LEARNING",
+          },
+        });
+
+        await tx.calendarBlock.updateMany({
+          where: { availabilityId: data.availabilityId, type: "TEACHING" },
+          data: { bookingId: booking.id },
+        });
+      }
+
+      return booking;
+    });
+  },
+
+  async updateBookingStatus(
+    bookingId: string,
+    status: "PENDING" | "CONFIRMED" | "COMPLETED" | "CANCELLED",
+  ) {
+    return prisma.booking.update({
+      where: { id: bookingId },
+      data: { status },
+    });
+  },
+
+  async confirmBooking(bookingId: string) {
+    return await prisma.$transaction(async (tx: any) => {
+      const booking = await tx.booking.findUniqueOrThrow({
+        where: { id: bookingId },
+        include: {
+          availability: true,
+          tutor: { include: { user: true } },
+          student: { include: { user: true } },
+        },
       });
 
+      if (booking.status !== "PENDING") {
+        throw new Error("Booking is not in pending status");
+      }
+
+      // Update status
+      await tx.booking.update({
+        where: { id: bookingId },
+        data: { status: "CONFIRMED" },
+      });
+
+      // Send notification to tutor
       await tx.notification.create({
         data: {
-          userId: tutor!.userId,
+          userId: booking.tutor.userId,
           type: "booking_confirmed",
           title: "New Booking!",
-          message: `A student has booked a session for ${slot.startTime.toLocaleString()}.`,
+          message: `A student has booked a session for ${booking.startTime.toLocaleString()}.`,
           relatedBookingId: booking.id,
         },
       });
 
+      // Create calendar block for student
       await tx.calendarBlock.create({
         data: {
-          userId: data.studentUserId,
-          availabilityId: data.availabilityId,
+          userId: booking.student.userId,
+          availabilityId: booking.availabilityId,
           bookingId: booking.id,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
+          startTime: booking.startTime,
+          endTime: booking.endTime,
           type: "LEARNING",
         },
       });
 
+      // Update tutor's calendar block
       await tx.calendarBlock.updateMany({
-        where: { availabilityId: data.availabilityId, type: "TEACHING" },
+        where: { availabilityId: booking.availabilityId, type: "TEACHING" },
         data: { bookingId: booking.id },
       });
 
@@ -192,7 +269,7 @@ export const BookingService = {
   // Get top-rated tutors (always returns results if tutors exist)
   async getTopRated() {
     return prisma.tutorProfile.findMany({
-      where: { 
+      where: {
         isActive: true,
       },
       take: 6,
@@ -210,15 +287,15 @@ export const BookingService = {
   // Legacy method - returns featured OR top-rated (for backward compatibility)
   async getFeatured() {
     const featuredTutors = await this.getFeaturedOnly();
-    
+
     if (featuredTutors.length >= 6) return featuredTutors;
 
     // Fill the rest with top rated tutors
     const featuredIds = featuredTutors.map((t: any) => t.id);
     const fillerTutors = await prisma.tutorProfile.findMany({
-      where: { 
+      where: {
         isActive: true,
-        id: { notIn: featuredIds }
+        id: { notIn: featuredIds },
       },
       take: 6 - featuredTutors.length,
       orderBy: [{ ratingAvg: "desc" }, { createdAt: "desc" }],
@@ -327,7 +404,11 @@ export const BookingService = {
   },
 
   // MARK BOOKING AS COMPLETED: Tutor or Admin can manually mark a session as completed
-  async markBookingCompleted(bookingId: string, userId: string, userRole: string) {
+  async markBookingCompleted(
+    bookingId: string,
+    userId: string,
+    userRole: string,
+  ) {
     return await prisma.$transaction(async (tx: any) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },

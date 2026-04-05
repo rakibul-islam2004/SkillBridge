@@ -26,10 +26,10 @@ app.use(
   }),
 );
 
-
 app.all("/api/v1/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1", routes);
 
 app.get("/", (req, res) => {
