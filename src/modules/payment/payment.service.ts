@@ -9,8 +9,17 @@ const sandboxApiUrl =
 const validationApiUrl =
   process.env.SSLCOMMERZ_VALIDATION_API ||
   "https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php";
-const backendUrl =
-  process.env.BACKEND_URL || process.env.VERCEL_URL || `http://localhost:${process.env.PORT || 4000}`;
+function getBackendUrl() {
+  if (process.env.BACKEND_URL) {
+    return process.env.BACKEND_URL;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  return `http://localhost:${process.env.PORT || 4000}`;
+}
+
+const backendUrl = getBackendUrl();
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
 function buildBackendUrl(path: string) {
