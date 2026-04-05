@@ -5,7 +5,9 @@ export const PaymentController = {
   async createSSLCommerzSession(req: Request, res: Response) {
     try {
       if (req.user!.role !== "STUDENT" || !req.user!.studentId) {
-        return res.status(403).json({ message: "Only students can make bookings" });
+        return res
+          .status(403)
+          .json({ message: "Only students can make bookings" });
       }
 
       const {
@@ -20,6 +22,19 @@ export const PaymentController = {
         customer_email,
         customer_phone,
       } = req.body;
+
+      if (
+        !tutorId ||
+        !pricingId ||
+        !availabilityId ||
+        !amount ||
+        !product_name
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing required tutor booking or payment details.",
+        });
+      }
 
       const result = await PaymentService.createSSLCommerzSession({
         studentId: req.user!.studentId!,

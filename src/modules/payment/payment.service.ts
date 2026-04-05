@@ -10,7 +10,7 @@ const validationApiUrl =
   process.env.SSLCOMMERZ_VALIDATION_API ||
   "https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php";
 const backendUrl =
-  process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 4000}`;
+  process.env.BACKEND_URL || process.env.VERCEL_URL || `http://localhost:${process.env.PORT || 4000}`;
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
 
 function buildBackendUrl(path: string) {
@@ -66,27 +66,41 @@ export const PaymentService = {
       value_d: payload.tutorId,
     });
 
-    const response = await axios.post(sandboxApiUrl, form.toString(), {
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-    });
+    try {
+      const response = await axios.post(sandboxApiUrl, form.toString(), {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      });
 
-    const data = response.data;
-    if (!data || data.status !== "SUCCESS" || !data.GatewayPageURL) {
-      throw new Error(
-        data?.failedreason ||
-          data?.message ||
-          "SSLCommerz session creation failed.",
-      );
+      const data = response.data;
+      if (!data || data.status !== "SUCCESS" || !data.GatewayPageURL) {
+        throw new Error(
+          data?.failedreason ||
+            data?.message ||
+            "SSLCommerz session creation failed.",
+        );
+      }
+
+      return {
+        bookingId: booking.id,
+        tranId,
+        gatewayUrl: data.GatewayPageURL,
+        rawResponse: data,
+      };
+    } catch (err: any) {
+      if (booking?.id) {
+        try {
+          await BookingService.updateBookingStatus(booking.id, "CANCELLED");
+        } catch (rollbackErr) {
+          console.error(
+            "Failed to cancel pending booking after SSL session error:",
+            rollbackErr,
+          );
+        }
+      }
+      throw err;
     }
-
-    return {
-      bookingId: booking.id,
-      tranId,
-      gatewayUrl: data.GatewayPageURL,
-      rawResponse: data,
-    };
   },
 
   async validateSSLCommerzTransaction(params: {
