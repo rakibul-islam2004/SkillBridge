@@ -132,4 +132,133 @@ export const PaymentController = {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     return res.redirect(`${frontendUrl}/ssl-commerce/fail`);
   },
+
+  async mockPaymentGateway(req: Request, res: Response) {
+    const { bookingId, tran_id, val_id, amount } = req.query;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+    const paymentMethods = [
+      { id: "bkash", name: "bKash", icon: "📱" },
+      { id: "nagad", name: "Nagad", icon: "📱" },
+      { id: "rocket", name: "Rocket", icon: "📱" },
+      { id: "card", name: "Credit/Debit Card", icon: "💳" },
+    ];
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Select Payment Method</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+          .container { max-width: 600px; margin: 50px auto; padding: 20px; }
+          .card { background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 30px; }
+          h1 { font-size: 24px; margin-bottom: 10px; color: #333; }
+          .amount { font-size: 18px; color: #666; margin-bottom: 30px; }
+          .methods { display: grid; gap: 12px; }
+          .method { 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            padding: 15px; 
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+          }
+          .method:hover { 
+            border-color: #4f46e5; 
+            background: #f9f9ff;
+          }
+          .method.active {
+            border-color: #4f46e5;
+            background: #f0f4ff;
+          }
+          .method-icon { font-size: 32px; }
+          .method-name { font-size: 16px; font-weight: 500; color: #333; flex: 1; }
+          .method-radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #e0e0e0; }
+          .method.active .method-radio { background: #4f46e5; border-color: #4f46e5; }
+          .pay-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+          }
+          .pay-btn:hover { background: #3f3ccc; }
+          .pay-btn:disabled { background: #ccc; cursor: not-allowed; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="card">
+            <h1>Select Payment Method</h1>
+            <div class="amount">Amount: ৳${amount}</div>
+            
+            <div class="methods" id="methods">
+              ${paymentMethods
+                .map(
+                  (method) => `
+                <div class="method" onclick="selectMethod('${method.id}')">
+                  <div class="method-icon">${method.icon}</div>
+                  <div class="method-name">${method.name}</div>
+                  <div class="method-radio"></div>
+                </div>
+              `,
+                )
+                .join("")}
+            </div>
+
+            <button class="pay-btn" onclick="submitPayment()" id="payBtn">
+              Pay ৳${amount}
+            </button>
+          </div>
+        </div>
+
+        <script>
+          let selectedMethod = null;
+
+          function selectMethod(method) {
+            document.querySelectorAll('.method').forEach(m => m.classList.remove('active'));
+            event.target.closest('.method').classList.add('active');
+            selectedMethod = method;
+          }
+
+          function submitPayment() {
+            if (!selectedMethod) {
+              alert('Please select a payment method');
+              return;
+            }
+
+            // Simulate payment processing
+            const payBtn = document.getElementById('payBtn');
+            payBtn.disabled = true;
+            payBtn.textContent = 'Processing...';
+
+            // Auto-redirect to success after brief delay
+            setTimeout(() => {
+              const successUrl = '${frontendUrl}/ssl-commerce/success?bookingId=${bookingId}&tran_id=${tran_id}&status=VALID&val_id=${val_id}&value_a=${bookingId}&mock=true';
+              window.location.href = successUrl;
+            }, 1500);
+          }
+
+          // Auto-select first method on load
+          window.addEventListener('load', () => {
+            selectMethod('${paymentMethods[0].id}');
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(html);
+  },
 };

@@ -47,7 +47,7 @@ export const PaymentService = {
       process.env.MOCK_PAYMENTS === "true";
 
     if (isDevelopment) {
-      console.log("Development mode: Creating mock payment session");
+      console.log("Development mode: Creating mock payment gateway");
 
       const booking = await BookingService.createBooking({
         studentId: payload.studentId,
@@ -58,10 +58,12 @@ export const PaymentService = {
         status: "PENDING",
       });
 
-      const tranId = `MOCK-${booking.id.slice(0, 8)}-${Date.now()}`;
+      const tranId = `SB-${booking.id.slice(0, 8)}-${Date.now()}`;
+      const valId = `VAL_${Date.now()}`;
 
-      // Return mock gateway URL that redirects directly to success
-      const mockGatewayUrl = `${frontendUrl}/ssl-commerce/success?bookingId=${booking.id}&tran_id=${tranId}&status=VALID&val_id=MOCK_VAL_${Date.now()}&value_a=${booking.id}&mock=true`;
+      // Return mock gateway URL with payment method selection
+      // This shows a custom page with payment options instead of OTP
+      const mockGatewayUrl = `${backendUrl}/api/v1/payment/mock-gateway?bookingId=${booking.id}&tran_id=${tranId}&val_id=${valId}&amount=${payload.amount}&pricingId=${payload.pricingId}&availabilityId=${payload.availabilityId}&tutorId=${payload.tutorId}`;
 
       return {
         bookingId: booking.id,
@@ -70,7 +72,7 @@ export const PaymentService = {
         rawResponse: {
           status: "SUCCESS",
           mock: true,
-          message: "Development mode: Mock payment session created",
+          message: "Development mode: Mock payment gateway created",
         },
       };
     }

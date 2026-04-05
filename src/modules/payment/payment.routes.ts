@@ -11,5 +11,6 @@ router.post(
 );
 router.get("/ssl-commerce/success", PaymentController.sslCommerzSuccess);
 router.get("/ssl-commerce/fail", PaymentController.sslCommerzFail);
+router.get("/mock-gateway", PaymentController.mockPaymentGateway);
 
 export default router;
